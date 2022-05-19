@@ -7,9 +7,9 @@ import itertools
 from functools import partial
 import numpy as onp
 from autograd.builtins import tuple as ag_tuple
-from experiments.rvae.model_jax import rvae_codec
-from experiments.rvae import utils
-from experiments.rvae.datasets_jax import CIFAR10
+from model_jax import rvae_codec
+import utils
+from datasets_jax import CIFAR10
 from tqdm import tqdm
 
 
