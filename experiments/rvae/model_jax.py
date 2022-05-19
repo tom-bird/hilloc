@@ -9,12 +9,13 @@ from functools import partial
 from autograd.builtins import tuple as ag_tuple
 
 
-params = onp.load('rvae_weights_4layer.npy', allow_pickle=True).item()
-
-
 z_size = 32
 h_size = 160
 depth = 24
+
+params = onp.load('rvae_weights_{}layer.npy'.format(depth), allow_pickle=True).item()
+nparams = sum([p.size for p in params.values()])
+print('{} parameters'.format(nparams))
 
 dimension_numbers = ('NHWC', 'HWIO', 'NHWC')
 one = (1, 1)
@@ -126,7 +127,7 @@ def rvae_codec(x_precision, prior_prec, posterior_prec, data_shape):
 
         # run down pass and pop according to posterior, top down
         inputs = jnp.tile(jnp.reshape(h_init, (1, 1, 1, -1)),
-                         (1, h // 2, w // 2, 1))  # assuming batch size 1 for now
+                         (batch_size, h // 2, w // 2, 1))
         zs = empty_list(depth)
         for i in reversed(range(depth)):
             (prior_mean, prior_logstd, rz_mean, rz_logstd), h_det = \
@@ -156,7 +157,7 @@ def rvae_codec(x_precision, prior_prec, posterior_prec, data_shape):
         zs = empty_list(depth)
         rp_stats = empty_list(depth)
         inputs = jnp.tile(jnp.reshape(h_init, (1, 1, 1, -1)),
-                         (1, h // 2, w // 2, 1))  # assuming batch size 1
+                         (batch_size, h // 2, w // 2, 1))
         for i in reversed(range(depth)):
             message, z = prior_codec.pop(message)
             (prior_mean, prior_logstd, rz_mean, rz_logstd), h_det = \
