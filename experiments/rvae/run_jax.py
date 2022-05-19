@@ -50,7 +50,7 @@ message = initial_message
 
 for ebatch in tqdm(eval_iter):
     # message = jax.pmap(compress_fn)(ebatch['image'])  # (16, 32, 32, 3)
-    image = ebatch[0]
+    image = ebatch['image'][0]
     message = codec.push(message, image)
     break
 l2 = len(cs.flatten(message))
