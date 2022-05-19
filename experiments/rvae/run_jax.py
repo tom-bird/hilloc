@@ -32,7 +32,7 @@ eval_iter = utils.numpy_iter(eval_ds)
 
 
 x_shape = onp.array([device_bs, 32, 32, 3])  # expect image to be NHWC
-latent_shape = (x_shape[0], x_shape[1]//2, x_shape[2]//2, 32)
+latent_shape = onp.array([x_shape[0], x_shape[1]//2, x_shape[2]//2, 32])
 x_size = jnp.prod(x_shape)
 latent_size = jnp.prod(latent_shape)
 
