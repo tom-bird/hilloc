@@ -127,7 +127,7 @@ def rvae_codec(x_precision, prior_prec, posterior_prec, data_shape):
 
         # run down pass and pop according to posterior, top down
         inputs = jnp.tile(jnp.reshape(h_init, (1, 1, 1, -1)),
-                         (batch_size, h // 2, w // 2, 1))
+                          (batch_size, h // 2, w // 2, 1))
         zs = empty_list(depth)
         for i in reversed(range(depth)):
             (prior_mean, prior_logstd, rz_mean, rz_logstd), h_det = \
@@ -145,19 +145,19 @@ def rvae_codec(x_precision, prior_prec, posterior_prec, data_shape):
         # push data
         x_mean = upsample_and_postprocess(inputs)
         codec = x_codec(x_mean)
-        message = codec.push(message, data)
+        message, = codec.push(message, data)
 
         # push z according to prior, bottom up
         for i in range(depth):
-            message = prior_codec.push(message, zs[i])
-        return message
+            message, = prior_codec.push(message, zs[i])
+        return message,
 
     def pop(message):
         # pop z according to prior, top down
         zs = empty_list(depth)
         rp_stats = empty_list(depth)
         inputs = jnp.tile(jnp.reshape(h_init, (1, 1, 1, -1)),
-                         (batch_size, h // 2, w // 2, 1))
+                          (batch_size, h // 2, w // 2, 1))
         for i in reversed(range(depth)):
             message, z = prior_codec.pop(message)
             (prior_mean, prior_logstd, rz_mean, rz_logstd), h_det = \
@@ -180,7 +180,7 @@ def rvae_codec(x_precision, prior_prec, posterior_prec, data_shape):
             prior_mean, prior_logstd, rz_mean, rz_logstd = rp_stats[i]
             codec = post_codec(qz_mean + rz_mean, jnp.exp(qz_logstd + rz_logstd),
                                prior_mean, jnp.exp(prior_logstd))
-            message = codec.push(message, zs[i])
+            message, = codec.push(message, zs[i])
         return message, data
 
     return cs.Codec(push, pop)

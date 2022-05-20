@@ -35,11 +35,11 @@ eval_iter = utils.numpy_iter(eval_ds)
 
 x_shape = onp.array([device_bs, 32, 32, 3])  # expect image to be NHWC
 latent_shape = onp.array([x_shape[0], x_shape[1]//2, x_shape[2]//2, 32])
-x_size = jnp.prod(x_shape)
-latent_size = jnp.prod(latent_shape)
+x_size = onp.prod(x_shape)
+latent_size = onp.prod(latent_shape)
 
 def vae_view(head):
-  return ag_tuple((anp.reshape(head[:latent_size], latent_shape), anp.reshape(head[latent_size:], x_shape)))
+    return ag_tuple((anp.reshape(head[:latent_size], latent_shape), anp.reshape(head[latent_size:], x_shape)))
 
 codec = cs.substack(rvae_codec(x_precision, prior_precision,
                                q_precision, x_shape),
@@ -53,8 +53,8 @@ for i, ebatch in enumerate(tqdm(eval_iter)):
     if i == n_batches:
         break
     # message = jax.pmap(partial(codec.push, message))(ebatch['image'])  # (16, 32, 32, 3)
-    image = ebatch['image'][0]
-    message = codec.push(message, image)
+    image = onp.uint64(ebatch['image'][0])
+    message, = codec.push(message, image)
 
 l2 = len(cs.flatten(message))
 print('{} bits per dim'.format(32 * (l2 - l1) / (n_batches * x_size)))
