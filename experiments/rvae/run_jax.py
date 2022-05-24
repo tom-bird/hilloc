@@ -8,7 +8,7 @@ from functools import partial
 import numpy as onp
 from autograd.builtins import tuple as ag_tuple
 from autograd import numpy as anp
-from model_jax import rvae_codec
+from model_jax import rvae_codec, observed_rvae_codec
 import utils
 from datasets_jax import CIFAR10
 from tqdm import tqdm
@@ -47,17 +47,23 @@ codec = cs.substack(rvae_codec(x_precision, prior_precision,
 
 rng = onp.random.RandomState(0)
 initial_message = cs.random_message(l1, (x_size + latent_size,), rng)
+dummy_message = cs.random_message(l1, (x_size + latent_size,), rng)
 message = initial_message
+
+ocodec = cs.substack(
+    observed_rvae_codec(x_precision, prior_precision, q_precision, x_shape),
+    vae_view)
+
 
 for i, ebatch in enumerate(tqdm(eval_iter)):
     if i == n_batches:
         break
     # message = jax.pmap(partial(codec.push, message))(ebatch['image'])  # (16, 32, 32, 3)
     image = onp.uint64(ebatch['image'][0])
-    message, = codec.push(message, image)
+    message, = ocodec.push(message, image)
 
 l2 = len(cs.flatten(message))
 print('{} bits per dim'.format(32 * (l2 - l1) / (n_batches * x_size)))
-message_, image_ = codec.pop(message)
+message_, image_ = ocodec.pop(message)
 onp.testing.assert_equal(image, image_)
 onp.testing.assert_equal(cs.flatten(initial_message), cs.flatten(message_))
